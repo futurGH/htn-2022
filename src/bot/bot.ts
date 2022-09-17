@@ -6,10 +6,13 @@ const clientId = ck.TWITCH_CLIENT_ID;
 const clientSecret = ck.TWITCH_CLIENT_SECRET;
 const tokenData = { expiresIn: 0, obtainmentTimestamp: 0 };
 
+export let authProvider: RefreshingAuthProvider;
 export let chatClient: ChatClient;
+export let authorized = false;
+
 export function auth({ accessToken, refreshToken }: Record<string, string>) {
 	if (!chatClient) {
-		const authProvider = new RefreshingAuthProvider(
+		authProvider = new RefreshingAuthProvider(
 			{
 				clientId,
 				clientSecret,
@@ -21,6 +24,7 @@ export function auth({ accessToken, refreshToken }: Record<string, string>) {
 			{ ...tokenData, accessToken, refreshToken }
 		);
 		chatClient = new ChatClient({ authProvider, channels: [] });
+		authorized = true;
 	}
 	return chatClient;
 }

@@ -1,12 +1,14 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@twurple/api': ^5.2.3
   '@twurple/auth': ^5.2.3
   '@twurple/chat': ^5.2.3
   '@types/node': ^18.7.18
   '@types/pg': ^8.6.5
   axios: ^0.27.2
   ckey: ^1.0.3
+  cohere-ai: ^4.3.0
   dotenv-cra: ^3.0.2
   fastify: ^4.6.0
   papaparse: ^5.3.2
@@ -16,11 +18,13 @@ specifiers:
   typescript: 4.9.0-dev.20220917
 
 dependencies:
+  '@twurple/api': 5.2.3_@twurple+auth@5.2.3
   '@twurple/auth': 5.2.3
   '@twurple/chat': 5.2.3_@twurple+auth@5.2.3
   '@types/pg': 8.6.5
   axios: 0.27.2
   ckey: 1.0.3
+  cohere-ai: 4.3.0
   dotenv-cra: 3.0.2
   fastify: 4.6.0
   papaparse: 5.3.2
@@ -75,6 +79,10 @@ packages:
 
   /@d-fischer/deprecate/2.0.2:
     resolution: {integrity: sha512-wlw3HwEanJFJKctwLzhfOM6LKwR70FPfGZGoKOhWBKyOPXk+3a9Cc6S9zhm6tka7xKtpmfxVIReGUwPnMbIaZg==}
+    dev: false
+
+  /@d-fischer/detect-node/3.0.1:
+    resolution: {integrity: sha512-0Rf3XwTzuTh8+oPZW9SfxTIiL+26RRJ0BRPwj5oVjZFyFKmsj9RGfN2zuTRjOuA3FCK/jYm06HOhwNK+8Pfv8w==}
     dev: false
 
   /@d-fischer/escape-string-regexp/5.0.0:
@@ -200,6 +208,24 @@ packages:
       '@d-fischer/qs': 7.0.2
       '@twurple/common': 5.2.3
       '@types/node-fetch': 2.6.2
+      tslib: 2.4.0
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
+  /@twurple/api/5.2.3_@twurple+auth@5.2.3:
+    resolution: {integrity: sha512-JJVfxWfK4SdJVNzoOiI+0lrbP3ltetNAyhLv/bOjh4ZlUboMhZGxfzWmIu8yBABDybXL+qkI/DRrqtrKHw/O0Q==}
+    peerDependencies:
+      '@twurple/auth': ^5.0.0
+    dependencies:
+      '@d-fischer/cache-decorators': 3.0.0
+      '@d-fischer/detect-node': 3.0.1
+      '@d-fischer/logger': 4.2.0
+      '@d-fischer/rate-limiter': 0.6.1
+      '@d-fischer/shared-utils': 3.2.0
+      '@twurple/api-call': 5.2.3
+      '@twurple/auth': 5.2.3
+      '@twurple/common': 5.2.3
       tslib: 2.4.0
     transitivePeerDependencies:
       - encoding
@@ -443,6 +469,10 @@ packages:
     dependencies:
       dotenv: 6.2.0
       find-config: 1.0.0
+    dev: false
+
+  /cohere-ai/4.3.0:
+    resolution: {integrity: sha512-Vt1m18zN/BdRIXiHiKDLbgfQydx5l4dtPDPuZ7i3e8wqC36/yJXb/TrE3YdlK2Kg+jHEBXFlLpu7QokLBJwg/w==}
     dev: false
 
   /combined-stream/1.0.8:
