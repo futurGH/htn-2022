@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"lib": ["ESNext"],
+		"target": "ESNext",
+		"moduleResolution": "node",
+		"sourceMap": true,
+
+		"strict": true,
+		"exactOptionalPropertyTypes": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+
+		"forceConsistentCasingInFileNames": true,
+		"experimentalDecorators": true,
+
+		"baseUrl": ".",
+		"outDir": "dist/",
+		"rootDir": "./src"
+	},
+	"include": ["src/**/*"]
+}
