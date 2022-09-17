@@ -6,14 +6,14 @@ import { auth, chatClient } from "../bot/bot.js";
 import ck from "ckey";
 import { URLSearchParams } from "url";
 import { client, trackChannel } from "../bot/db.js";
-import { getStreamChatSentiment } from "../analysis/getStreamChatSentiment.js";
+import { getStreamChatSentiment } from "../chat-analysis/getStreamChatSentiment.js";
 
 const fastify = Fastify({ logger: true });
 
 fastify.get("/auth/twitch", async (request, reply) => {
 	const { query } = request;
 
-	if (query !== null && query !== undefined && typeof query === "object" && "code" in query) {
+	if (query && typeof query === "object" && "code" in query) {
 		// @ts-expect-error TS2322
 		const { code } = query;
 
