@@ -2,10 +2,10 @@
 
 import Fastify from "fastify";
 import Axios from "axios";
-import { auth, chatClient } from "./bot.js";
+import { auth, chatClient } from "../bot/bot.js";
 import ck from "ckey";
 import { URLSearchParams } from "url";
-import { trackChannel } from "./db.js";
+import { trackChannel } from "../bot/db.js";
 
 const fastify = Fastify({ logger: true });
 
@@ -23,7 +23,6 @@ fastify.get("/auth/twitch", async (request, reply) => {
 			code,
 			grant_type: "authorization_code"
 		}
-
 
 		const result = await Axios.post(
 			`https://id.twitch.tv/oauth2/token?${(new URLSearchParams(params)).toString()}`,

@@ -7,7 +7,9 @@ export const DATABASE_URL = `postgresql://${ck.COCKROACH_USER}:${ck.COCKROACH_PA
 const client = new PG.Client(DATABASE_URL);
 await client.connect();
 
-export async function trackChannel(channel: string) {
+export { client, trackChannel }
+
+async function trackChannel(channel: string) {
 	await client.query(`CREATE TABLE IF NOT EXISTS chat_log.${channel} (
 	author TEXT NOT NULL,
 	message TEXT NOT NULL,
