@@ -7,6 +7,11 @@ import ck from "ckey";
 import { URLSearchParams } from "url";
 import { client, trackChannel } from "../bot/db.js";
 import { getStreamChatSentiment } from "../chat-analysis/getStreamChatSentiment.js";
+import {
+	beginAnalysis,
+	getTranscriptionAndVideoIfDone
+} from "../stream-analysis/analyzeStreamVideo.js";
+import { getTokenInfo } from "@twurple/auth";
 
 const fastify = Fastify({ logger: true });
 
@@ -36,19 +41,46 @@ fastify.get("/auth/twitch", async (request, reply) => {
 			return reply.status(500).send("Could not complete oauth flow");
 		}
 		const { access_token, refresh_token } = result.data;
+		const tokenInfo = await getTokenInfo(access_token, ck.TWITCH_CLIENT_ID);
+		const username = tokenInfo.userName;
 		auth({ accessToken: access_token, refreshToken: refresh_token });
 		await chatClient.connect()
 			.catch(() => reply.status(500).send("Failed to initiate client"));
-		await trackChannel("futur_istick");
-		reply.status(200).send("Started client");
-	} else reply.code(500).send("Invalid request");
+		if (username) {
+			await trackChannel(username).catch((e) => {
+				console.error(e);
+			});
+			beginAnalysis(`https://twitch.tv/${username}`);
+			reply.status(200).send("Now analyzing stream");
+		} else reply.status(400).send("Started client but there was no stream found");
+	} else reply.status(500).send("Invalid request");
 });
 
-fastify.get("/sentiment", async (request, reply) => {
-	const streamId = await client.query("SELECT id FROM chat_log.streams ORDER BY streamStart DESC LIMIT 1");
-	const sentiment = await getStreamChatSentiment("futur_istick", streamId.rows[0].id);
-	console.log(sentiment);
-	reply.status(200).send(sentiment);
+fastify.get("/chat-sentiment", async (request, reply) => {
+	const { query } = request;
+
+	if (query && typeof query === "object" && "channel" in query) {
+		// @ts-expect-error TS2322
+		const { channel, id } = query;
+		const streamId = id || (await client.query("SELECT id FROM chat_log.streams ORDER BY streamStart DESC LIMIT 1")).rows[0].id;
+		const sentiment = await getStreamChatSentiment(channel, streamId);
+		console.log(sentiment);
+		reply.status(200).send(sentiment);
+	}
+})
+
+fastify.get("/video-sentiment", async (request, reply) => {
+	const { query } = request;
+
+	if (query && typeof query === "object" && "channel" in query) {
+		// @ts-expect-error TS2322
+		const { channel } = query;
+
+		const results = await getTranscriptionAndVideoIfDone(channel);
+		if (results) {
+			reply.status(200).send(results);
+		} else reply.status(500).send("Video not analyzed yet");
+	}
 })
 
 await fastify.listen({ port: 3000 }).catch(e => {

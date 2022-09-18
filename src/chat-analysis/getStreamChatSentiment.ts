@@ -19,7 +19,19 @@ export async function getStreamChatSentiment(channel: string, streamId: string) 
 	const { streamstart, streamend } = stream;
 
 	const streamMessages = await fetchStreamData(channel, streamstart, streamend || new Date());
-	return streamMessages.length ? averageSentiment(streamstart, streamend || new Date(), streamMessages) : null;
+	const streamLength = (streamend || new Date()).getTime() - streamstart.getTime();
+	if (!streamMessages.length) return null;
+
+	let start: number = streamstart.getTime();
+	const end = streamend?.getTime() || Date.now();
+	const sentimentPerTenSeconds = await Promise.all(Array.from({ length: Math.ceil(streamLength / 1000 / 10)}).map((_, i, arr) => {
+		const startDate = new Date(start);
+		start += 10000;
+		const endDate = start > end ? streamend : new Date(start);
+		return averageSentiment(startDate, endDate!, streamMessages);
+	}));
+
+	return { start: streamstart, end: streamend, length: streamLength, messages: streamMessages, sentiment: sentimentPerTenSeconds };
 }
 export async function getSentimentData(inputs: Array<LogMessage>): Promise<Classifications | null> {
 	const sentiment = await cohere.classify({
@@ -27,16 +39,23 @@ export async function getSentimentData(inputs: Array<LogMessage>): Promise<Class
 		examples: EXAMPLES,
 		model: ck.COHERE_MODEL_ID,
 		taskDescription: "Classify social media messages as positive, negative, or neutral",
+	}).catch(e => {
+		console.error("Error while classifying.");
+		throw e;
 	})
-
-
-	return sentiment?.body?.classifications || null;
+	if (!sentiment.body?.classifications) {
+		console.error("Failure with status " + sentiment.statusCode)
+		console.info(sentiment.body);
+		return null;
+	}
+	return sentiment.body.classifications;
 }
 
 export async function averageSentiment(start: Date, end: Date, messages: Array<LogMessage>) {
 	const messagesInRange = messages.filter(m => m.timestamp > start && m.timestamp < end);
+	if (!messagesInRange.length) return 0;
 	const sentimentClassifications = await getSentimentData(messagesInRange);
-	if (!sentimentClassifications) return null;
+	if (!sentimentClassifications) return 0;
 	const sentimentValues = sentimentClassifications.map(c => {
 		const sentimentCounts = [
 			...Array(parseInt((c.labels.positive.confidence * 100).toPrecision(2))).fill(1),

@@ -48,7 +48,7 @@ async function trackChannel(channel: string) {
 	} else chatClient.onRegister(()  => joinChannel(channel));
 
 	const channelStream = await apiClient.streams.getStreamByUserName(channel);
-	if (!channelStream) return;
+	if (!channelStream) throw new Error("No stream found!");
 	chatClient.onMessage(async (messageChannel, user, message, msg) => {
 		if (
 			channel

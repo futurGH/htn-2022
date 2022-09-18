@@ -18,5 +18,8 @@
 		"outDir": "dist/",
 		"rootDir": "./src"
 	},
+	"ts-node": {
+		"files": true
+	},
 	"include": ["src/**/*"]
 }
