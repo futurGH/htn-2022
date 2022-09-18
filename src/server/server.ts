@@ -2,7 +2,7 @@
 
 import Fastify from "fastify";
 import Axios from "axios";
-import { auth, chatClient } from "../bot/bot.js";
+import { auth, authorized, chatClient } from "../bot/bot.js";
 import ck from "ckey";
 import { URLSearchParams } from "url";
 import { client, trackChannel } from "../bot/db.js";
@@ -10,10 +10,18 @@ import { getStreamChatSentiment } from "../chat-analysis/getStreamChatSentiment.
 import {
 	beginAnalysis,
 	getTranscriptionAndVideoIfDone
-} from "../stream-analysis/analyzeStreamVideo.js";
+} from "../stream-analysis/analyzeStreamVideo.js"
 import { getTokenInfo } from "@twurple/auth";
+import cors from "@fastify/cors";
 
 const fastify = Fastify({ logger: true });
+await fastify.register(cors, {
+	origin: "*",
+})
+
+fastify.get("/auth/is-authed", async (request, reply) => {
+	return authorized ? reply.status(200).send("Authorized") : reply.status(401).send("Unauthorized");
+})
 
 fastify.get("/auth/twitch", async (request, reply) => {
 	const { query } = request;
@@ -45,14 +53,14 @@ fastify.get("/auth/twitch", async (request, reply) => {
 		const username = tokenInfo.userName;
 		auth({ accessToken: access_token, refreshToken: refresh_token });
 		await chatClient.connect()
-			.catch(() => reply.status(500).send("Failed to initiate client"));
+			.catch(() => reply.redirect(`http://localhost:3001/dashboard${username ? `?username=${username}` : ""}`));
 		if (username) {
 			await trackChannel(username).catch((e) => {
 				console.error(e);
 			});
 			beginAnalysis(`https://twitch.tv/${username}`);
-			reply.status(200).send("Now analyzing stream");
-		} else reply.status(400).send("Started client but there was no stream found");
+		}
+		reply.redirect(`http://localhost:3001/dashboard?username=${username}`);
 	} else reply.status(500).send("Invalid request");
 });
 

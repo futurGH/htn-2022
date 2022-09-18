@@ -66,7 +66,7 @@ export async function averageSentiment(start: Date, end: Date, messages: Array<L
 		return isNaN(sentiment) ? 0 : Number(sentiment.toPrecision(3));
 	})
 	const averageSentiment = sentimentValues.reduce((a, b) => a + b, 0) / sentimentValues.length || 0;
-	return averageSentiment / 100;
+	return averageSentiment;
 }
 
 const EXAMPLES = [

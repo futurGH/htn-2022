@@ -8,6 +8,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fastify/cors": "^8.1.0",
     "@twurple/api": "^5.2.3",
     "@twurple/auth": "^5.2.3",
     "@twurple/chat": "^5.2.3",

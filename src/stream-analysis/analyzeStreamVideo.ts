@@ -27,24 +27,29 @@ const assembly = axios.create({
 	},
 });
 
+const createTranscriptionTable = async () => await client.query(`CREATE TABLE IF NOT EXISTS chat_log.transcriptions (
+	channel STRING NOT NULL PRIMARY KEY,
+	transcriptions JSONB NOT NULL
+)`);
 export function beginAnalysis(link: string) {
 	analyzeFromLink(link, async (transcript) => {
 		console.log("done");
-		await client.query(`CREATE TABLE IF NOT EXISTS chat_log.transcriptions (
-	channel STRING NOT NULL PRIMARY KEY,
-	transcriptions JSONB NOT NULL
-)`).then(() => client.query(`UPSERT INTO chat_log.transcriptions (channel, transcriptions) VALUES ($1, $2)`, [link.split("/").pop()!, JSON.stringify(transcript)]));
+		await createTranscriptionTable();
+		await client.query(`UPSERT INTO chat_log.transcriptions (channel, transcriptions) VALUES ($1, $2)`, [link.split("/").pop()!, JSON.stringify(transcript)]);
 	});
 }
 
 export async function getTranscriptionAndVideoIfDone(channel: string): Promise<{ transcript: AssemblyResults, video: Blob } | null> {
-	const { rows: [{ transcriptions = [] }] } = await client.query(`SELECT * FROM chat_log.transcriptions WHERE channel = $1`, [channel]);
+	await createTranscriptionTable();
+	const { rows: [{ transcriptions = [] } = {}] } = await client.query(`SELECT * FROM chat_log.transcriptions WHERE channel = $1`, [channel]).catch(() => ({ rows: [{}] }));
 	if (!transcriptions.length) return null;
-	const video = new Blob([await fs.readFile(`./__videos/${channel}.ts`)]);
+	const filepath = `./__videos/${ channel }.ts`
+	const video = new Blob(existsSync(filepath) ? [await fs.readFile(filepath)] : []);
 	return { video, transcript: transcriptions }
 }
 
 export async function analyzeFromLink<T>(link: string, callback: (transcript: AssemblyResults, file: Buffer) => T) {
+	await createTranscriptionTable();
 	const channelName = link.split("/").at(-1);
 	const filename = `./__videos/${channelName}.ts`;
 	if (existsSync(filename)) await fs.unlink(filename);
@@ -55,7 +60,7 @@ export async function analyzeFromLink<T>(link: string, callback: (transcript: As
 		const uploadUrl = uploaded.data.upload_url;
 		console.log(uploadUrl);
 		await getVideoTranscript(uploadUrl, (transcript) => callback(transcript, content))
-	});
+	}).catch((e) => console.error(e));
 }
 
 // @ts-expect-error TS2355

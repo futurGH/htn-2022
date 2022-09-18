@@ -9,8 +9,9 @@ const client = new PG.Client(DATABASE_URL);
 await client.connect();
 
 let apiClient: ApiClient;
+export const setApiClient = (thing: ApiClient) => apiClient = thing;
 
-export { client, trackChannel }
+export { client, apiClient, trackChannel }
 
 export type TableStream = {
 	channel: string;
@@ -48,7 +49,7 @@ async function trackChannel(channel: string) {
 	} else chatClient.onRegister(()  => joinChannel(channel));
 
 	const channelStream = await apiClient.streams.getStreamByUserName(channel);
-	if (!channelStream) throw new Error("No stream found!");
+	if (!channelStream) return;
 	chatClient.onMessage(async (messageChannel, user, message, msg) => {
 		if (
 			channel
@@ -63,12 +64,14 @@ async function trackChannel(channel: string) {
 		);
 		await client.query(`INSERT INTO chat_log.${channel} VALUES ($1, $2, $3)`, [user, message, msg.date]);
 	});
-	chatClient.onDisconnect(() => {
-		client.query(
-			`UPDATE chat_log.streams SET streamEnd = $1 WHERE id = $2`,
-			[new Date(), channelStream.id]
-		);
-	})
+	setInterval(async () => {
+		if (!(await apiClient.streams.getStreamByUserName(channel))) {
+			client.query(
+				`UPDATE chat_log.streams SET streamEnd = $1 WHERE id = $2`,
+				[new Date(), channelStream.id]
+			);
+		}
+	}, 5000)
 }
 
 async function joinChannel(channel: string) {
