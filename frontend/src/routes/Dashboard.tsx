@@ -41,13 +41,13 @@ export function Dashboard() {
     }, 5000)
   }, [searchParams]);
 
-  const noContent = !Object.keys(chatLogs).length && !audioTranscript.length;
+  const noContent = !Object.keys(chatLogs || {}).length && !audioTranscript.length;
 
   return (
     <div className='flex justify-center items-center h-screen w-screen'>
       {noContent ? <span className="text-lg text-gray-700 font-medium">Start a stream to begin collecting statistics!</span> : (
         <div className='flex w-4/5 space-x-16'>
-        {!!Object.keys(chatLogs).length && (<div className='flex flex-col w-3/5 space-y-8'>
+        {!!Object.keys(chatLogs || {}).length && (<div className='flex flex-col w-3/5 space-y-8'>
           <StreamAnalytics messages={chatLogs} audio={audioTranscript}/>
           <ChatLogs data={chatLogs}/>
         </div>)
