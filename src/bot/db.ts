@@ -50,6 +50,11 @@ async function trackChannel(channel: string) {
 
 	const channelStream = await apiClient.streams.getStreamByUserName(channel);
 	if (!channelStream) return;
+
+	await client.query(
+		`INSERT INTO chat_log.streams (channel, id, title, streamStart) VALUES ($1, $2, $3, $4)`,
+		[channel, channelStream.id, channelStream.title, new Date()]
+	);
 	chatClient.onMessage(async (messageChannel, user, message, msg) => {
 		if (
 			channel
@@ -58,18 +63,15 @@ async function trackChannel(channel: string) {
 				.toLowerCase()
 				.replace(/[^a-z0-9_\-]/gm, "")) return;
 		console.log(message);
-		await client.query(
-				`INSERT INTO chat_log.streams (channel, id, title, streamStart) VALUES ($1, $2, $3, $4)`,
-				[channel, channelStream.id, channelStream.title, channelStream.startDate]
-		);
 		await client.query(`INSERT INTO chat_log.${channel} VALUES ($1, $2, $3)`, [user, message, msg.date]);
 	});
-	setInterval(async () => {
+	const endStream = setInterval(async () => {
 		if (!(await apiClient.streams.getStreamByUserName(channel))) {
-			client.query(
+			await client.query(
 				`UPDATE chat_log.streams SET streamEnd = $1 WHERE id = $2`,
 				[new Date(), channelStream.id]
 			);
+			clearInterval(endStream);
 		}
 	}, 5000)
 }

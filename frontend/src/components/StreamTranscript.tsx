@@ -1,6 +1,6 @@
 export function StreamTranscript({ data }: { data: { text: string, start: number, end: number, sentiment: string, confidence: number }[]}) {
   return (
-    <div className="flex flex-col w-3/5 h-48 overflow-auto">
+    <div className="flex flex-col w-full h-48 overflow-auto">
       <p>Stream Transcript</p>
       {data.map((transcript) => {
         return (
